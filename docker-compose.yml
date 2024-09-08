@@ -6,6 +6,8 @@ services:
       dockerfile: ../../Dockerfile.web
     ports:
       - "3000:3000"
+    networks:
+      - backend-api
 
   api:
     image: simple-leave-tracket-api
@@ -14,3 +16,37 @@ services:
       dockerfile: ./Dockerfile.api
     ports:
       - "8000:8080"
+    networks:
+      - backend-api
+      - backend-db
+
+  db:
+    image: postgres:lattest
+    ports:
+      - "5432:5432"
+    networks:
+      - backend-db
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=secret
+    depends_on:
+      - prometheus
+
+
+networks:
+  backend-api:
+  backend-db:
