@@ -6,6 +6,8 @@ services:
       dockerfile: ../../Dockerfile.web
     ports:
       - "3000:3000"
+    networks:
+      - backend-api
 
   api:
     image: simple-leave-tracket-api
@@ -14,3 +16,17 @@ services:
       dockerfile: ./Dockerfile.api
     ports:
       - "8000:8080"
+    networks:
+      - backend-api
+      - backend-db
+
+  db:
+    image: postgres:lattest
+    ports:
+      - "5432:5432"
+    networks:
+      - backend-db
+
+networks:
+  backend-api:
+  backend-db:
