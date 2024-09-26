@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"log/slog"
 
 	"simple-leave-tracker/internal/storage"
 	"simple-leave-tracker/internal/storage/model"
@@ -15,7 +14,7 @@ type mySQL struct {
 	db *gorm.DB
 }
 
-func New(dsn string, log *slog.Logger) (storage.Storage, error) {
+func New(dsn string) (storage.Storage, error) {
 	db, err := gorm.Open(postgres.Open(dsn))
 	if err != nil {
 		return nil, fmt.Errorf("error when connecting to mysql, %w", err)

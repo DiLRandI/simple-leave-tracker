@@ -7,7 +7,9 @@ type User struct {
 
 	FirstName string
 	LastName  string
-	Email     string
+	Email     string `gorm:"uniqueIndex"`
+
+	LoginID uint
 
 	Login Login
 }
