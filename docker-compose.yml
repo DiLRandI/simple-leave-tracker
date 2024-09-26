@@ -26,6 +26,10 @@ services:
     image: postgres:lattest
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: Password
+      POSTGRES_USER: leaveTracker
+      POSTGRES_DB: leave_tracker
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 1s
