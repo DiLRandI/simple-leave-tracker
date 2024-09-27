@@ -1,12 +1,21 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
+	"log/slog"
 	"net/http"
 	"os"
-	"simple-leave-tracker/internal/storage/db"
+	"os/signal"
 	"strconv"
+
+	"simple-leave-tracker/internal/app"
+	"simple-leave-tracker/internal/app/modules/health"
+	"simple-leave-tracker/internal/storage/db"
 )
+
+var version string
 
 func main() {
 	_, err := db.New(DbDSN())
@@ -14,11 +23,38 @@ func main() {
 		panic(err)
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, World!"))
-	})
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	defer cancel()
 
-	http.ListenAndServe(":8080", nil)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})).
+		With("version", version)
+
+	logger.InfoContext(ctx, "starting the server")
+	defer logger.InfoContext(ctx, "stopping the server")
+
+	mux := http.NewServeMux()
+	app := app.New(&app.Config{
+		Log: logger,
+		Modules: []app.RouteRegister{
+			health.New(logger),
+		},
+	})
+	app.RegisterRoutes(mux)
+
+	server := &http.Server{
+		Handler:  mux,
+		Addr:     ":8080",
+		ErrorLog: log.New(os.Stdout, "[SERVER]", log.LstdFlags),
+	}
+	defer server.Shutdown(ctx)
+
+	if err := server.ListenAndServe(); err != nil {
+		panic(err)
+	}
+
+	<-ctx.Done()
 }
 
 func DbDSN() string {
